@@ -1123,8 +1123,8 @@ fn rearrange_artboards(s: &mut Session, p: &Value) -> Result<Value> {
         tops.into_iter()
             .filter(|n| locked_and_hidden || !locks.holds(n))
             .filter_map(|n| {
-                let c = n.geometric_bounds_with(&symbols)?.center();
-                let dl = *d.artboard_holding(c, false).and_then(|i| deltas.get(i))?;
+                let b = n.geometric_bounds_with(&symbols)?;
+                let dl = *d.artboard_for_bounds(b).and_then(|i| deltas.get(i))?;
                 (dl != Vec2::ZERO).then_some((n.id, dl))
             })
             .collect()
