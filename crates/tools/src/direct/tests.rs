@@ -1287,4 +1287,15 @@ fn double_clicking_outside_isolation_exits_isolation_mode() {
         let acts = t.pointer(&c, &inside);
         assert_ne!(acts, vec![Action::Exec("object.exitIsolation".into(), json!({}))], "inside rect (group: {group})");
     }
+
+    // Double-clicking on a ruler guide outside isolated rect does not exit isolation
+    let mut d_guide = d.clone();
+    d_guide.guides.push(vectorcraft_doc::Guide { pos: 350.0, vertical: true, layer: None, artboard: None });
+    let mut c_guide = cx(&d_guide, &s, &p);
+    c_guide.isolation = Some(id);
+    for group in [false, true] {
+        let mut t = DirectSelectionTool::new(group);
+        let acts = t.pointer(&c_guide, &outside);
+        assert_ne!(acts, vec![Action::Exec("object.exitIsolation".into(), json!({}))], "on guide (group: {group})");
+    }
 }

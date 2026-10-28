@@ -533,6 +533,9 @@ impl Tool for DirectSelectionTool {
                 if let Some(a) = release_guide_at(cx, p, ev.mods) {
                     return vec![a];
                 }
+                if crate::rulerguide::guide_at(cx, p).is_some() {
+                    return vec![];
+                }
                 if hit_test(cx.doc, p, cx.hit_options()).is_none() && cx.isolation.is_some() {
                     return vec![Action::Exec("object.exitIsolation".into(), json!({}))];
                 }
