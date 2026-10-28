@@ -529,7 +529,15 @@ impl Tool for DirectSelectionTool {
                 self.state = State::MoveObject { start: p, grab: None, hold: hold_point(cx, &h, p), began: false, deselect };
                 out
             }
-            (PointerKind::DoubleClick, _) if self.group => release_guide_at(cx, p, ev.mods).into_iter().collect(),
+            (PointerKind::DoubleClick, _) if self.group => {
+                if let Some(a) = release_guide_at(cx, p, ev.mods) {
+                    return vec![a];
+                }
+                if hit_test(cx.doc, p, cx.hit_options()).is_none() && cx.isolation.is_some() {
+                    return vec![Action::Exec("object.exitIsolation".into(), json!({}))];
+                }
+                vec![]
+            }
             (PointerKind::DoubleClick, _) if !self.group => {
                 self.state = State::Idle;
                 if let Some(a) = corners::double_click(cx, p, true) {
@@ -542,8 +550,12 @@ impl Tool for DirectSelectionTool {
                     return vec![];
                 }
                 // A double-click edits what is drawn: not a clipping path's outline.
-                if hit_test(cx.doc, p, cx.hit_options()).and_then(|h| cx.doc.node(h.leaf)).is_some_and(|n| matches!(n.kind, NodeKind::Text(_))) {
-                    return vec![Action::SwitchTool("type".into())];
+                if let Some(h) = hit_test(cx.doc, p, cx.hit_options()) {
+                    if cx.doc.node(h.leaf).is_some_and(|n| matches!(n.kind, NodeKind::Text(_))) {
+                        return vec![Action::SwitchTool("type".into())];
+                    }
+                } else if cx.isolation.is_some() {
+                    return vec![Action::Exec("object.exitIsolation".into(), json!({}))];
                 }
                 vec![]
             }

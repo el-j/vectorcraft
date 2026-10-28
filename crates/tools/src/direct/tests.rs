@@ -1262,3 +1262,29 @@ fn selected_path_handle_over_background_rect_is_draggable() {
     let acts = t.pointer(&c, &PointerEvent::new(PointerKind::Down, 150.0, 150.0));
     assert_eq!(acts, vec![Action::Begin("Reshape".into())]);
 }
+
+/// #4466: In isolation mode, double-clicking outside the isolated artwork with Direct Selection
+/// or Group Selection exits isolation mode, matching Selection tool.
+#[test]
+fn double_clicking_outside_isolation_exits_isolation_mode() {
+    let (d, id) = doc_with_rect();
+    let (s, p) = (Selection::default(), paint());
+    let mut c = cx(&d, &s, &p);
+    c.isolation = Some(id);
+
+    // Double-clicking on empty canvas outside the isolated rect exits isolation
+    let outside = PointerEvent::new(PointerKind::DoubleClick, 350.0, 350.0);
+    for group in [false, true] {
+        let mut t = DirectSelectionTool::new(group);
+        let acts = t.pointer(&c, &outside);
+        assert_eq!(acts, vec![Action::Exec("object.exitIsolation".into(), json!({}))], "group: {group}");
+    }
+
+    // Double-clicking inside the isolated rect does not exit isolation
+    let inside = PointerEvent::new(PointerKind::DoubleClick, 150.0, 150.0);
+    for group in [false, true] {
+        let mut t = DirectSelectionTool::new(group);
+        let acts = t.pointer(&c, &inside);
+        assert_ne!(acts, vec![Action::Exec("object.exitIsolation".into(), json!({}))], "inside rect (group: {group})");
+    }
+}

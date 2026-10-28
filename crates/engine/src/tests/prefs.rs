@@ -360,6 +360,13 @@ fn double_clicking_a_single_object_isolates_it() {
     let st = s.doc().unwrap();
     assert_eq!((st.isolation, st.selection.objects.clone()), (None, vec![a]));
     assert!(st.doc.node(b).is_some());
+    // Direct Selection tool also exits isolation mode on double-click outside (#4466).
+    ev(&mut s, &double, 125.0, 125.0);
+    assert_eq!(s.doc().unwrap().isolation, Some(a));
+    s.select_tool("directSelection", ViewInfo::default()).unwrap();
+    ev(&mut s, &double, 50.0, 350.0);
+    assert_eq!(s.doc().unwrap().isolation, None, "direct selection double-click leaves isolation");
+    s.select_tool("selection", ViewInfo::default()).unwrap();
     // Type is not isolated.
     let t = id(s.execute("text.create", &json!({"x": 100, "y": 300, "text": "Type"})).unwrap());
     assert!(s.execute("object.isolate", &json!({"id": t.0})).is_err());
