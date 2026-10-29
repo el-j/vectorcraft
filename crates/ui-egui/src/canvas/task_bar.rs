@@ -92,13 +92,20 @@ pub(super) fn task_bar(app: &mut VectorcraftApp, ui: &mut Ui, xf: &Xf) {
         // offers Remove, Connect, Cut and Convert to corner or smooth, as the reference app does
         // (<https://helpx.adobe.com/illustrator/desktop/get-started/learn-the-basics/contextual-task-bar-overview.html>).
         // These run the same commands as the Control bar's anchor buttons.
-        let anchors = !st.selection.anchors.is_empty();
-        if anchors {
-            items.push((tl!("Remove Anchor Points"), "pen-tool-delete", "path.removeAnchors", none()));
-            items.push((tl!("Connect"), "dc-join", "path.join", none()));
-            items.push((tl!("Cut Path"), "scissors", "path.cutAtAnchors", none()));
-            items.push((tl!("Corner"), "dc-anchor", TASK_BAR_TO_CORNER, none()));
-            items.push((tl!("Smooth"), "dc-anchor-smooth", TASK_BAR_TO_SMOOTH, none()));
+        let controls = crate::chrome::anchor_controls(app);
+        match controls {
+            crate::chrome::AnchorControls::All => {
+                items.push((tl!("Remove Anchor Points"), "pen-tool-delete", "path.removeAnchors", none()));
+                items.push((tl!("Connect"), "dc-join", "path.join", none()));
+                items.push((tl!("Cut Path"), "scissors", "path.cutAtAnchors", none()));
+                items.push((tl!("Corner"), "dc-anchor", TASK_BAR_TO_CORNER, none()));
+                items.push((tl!("Smooth"), "dc-anchor-smooth", TASK_BAR_TO_SMOOTH, none()));
+            }
+            crate::chrome::AnchorControls::Convert => {
+                items.push((tl!("Corner"), "dc-anchor", TASK_BAR_TO_CORNER, none()));
+                items.push((tl!("Smooth"), "dc-anchor-smooth", TASK_BAR_TO_SMOOTH, none()));
+            }
+            crate::chrome::AnchorControls::None => {}
         }
         // As in the reference app, open paths offer Join and Edit Path, compound paths and clipping
         // masks their Release, images selected with vector art Make Clipping Mask, and type converts
@@ -122,7 +129,9 @@ pub(super) fn task_bar(app: &mut VectorcraftApp, ui: &mut Ui, xf: &Xf) {
                 items.push((tl!("Isolate"), "square-dashed", "object.isolate", none()));
             }
         } else if is_compound {
-            items.push(edit_path());
+            if controls == crate::chrome::AnchorControls::None {
+                items.push(edit_path());
+            }
             items.push((tl!("Release Compound Path"), "ungroup", "object.compoundPath.release", none()));
         } else if let Some(kind) = text {
             items.push((tl!("Create Outlines"), "type", "type.createOutlines", none()));
@@ -134,7 +143,7 @@ pub(super) fn task_bar(app: &mut VectorcraftApp, ui: &mut Ui, xf: &Xf) {
             }
         } else if is_image {
             // Offset Path and Simplify don't apply to an image.
-        } else if !anchors {
+        } else if controls == crate::chrome::AnchorControls::None {
             if open_path {
                 items.push((tl!("Join"), "dc-join", "path.join", none()));
             }

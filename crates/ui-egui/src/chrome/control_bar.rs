@@ -23,7 +23,8 @@ pub fn anchor_controls(app: &VectorcraftApp) -> AnchorControls {
     if !st.selection.anchors.is_empty() {
         return AnchorControls::All;
     }
-    let paths = st.selection.objects.iter().any(|id| st.doc.node(*id).is_some_and(|n| matches!(n.kind, NodeKind::Path { .. })));
+    let paths =
+        st.selection.objects.iter().any(|id| st.doc.node(*id).is_some_and(|n| matches!(n.kind, NodeKind::Path { .. } | NodeKind::Compound { .. })));
     if paths && vectorcraft_tools::catalog::edits_anchors(app.session.tool_id()) { AnchorControls::Convert } else { AnchorControls::None }
 }
 

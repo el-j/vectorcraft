@@ -75,6 +75,22 @@ fn an_open_path_offers_join_and_edit_path() {
     click(&mut app, "Edit Path");
     assert_eq!(app.session.tool_id(), "directSelection");
     assert_eq!(app.session.active().unwrap().selection.objects, [NodeId(line)]);
+    // Once in Direct Selection mode, the task bar presents path-edit tooling instead of Edit Path (#4469).
+    let (_, texts) = bar(&mut app);
+    assert!(!has(&texts, "Edit Path") && !has(&texts, "Offset Path") && !has(&texts, "Simplify"), "{texts:?}");
+    for label in ["Corner", "Smooth"] {
+        assert!(has(&texts, label), "missing {label}: {texts:?}");
+    }
+
+    // When anchors are direct-selected via the Direct Selection tool, path-edit tooling is shown too (#4469).
+    let r = id(app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap());
+    app.select_tool("directSelection");
+    app.run("select.anchors", json!({"id": r, "anchors": [[0, 0]]})).unwrap();
+    let (_, texts) = bar(&mut app);
+    assert!(!has(&texts, "Edit Path"), "{texts:?}");
+    for label in ["Remove Anchor Points", "Connect", "Cut Path", "Corner", "Smooth"] {
+        assert!(has(&texts, label), "missing {label}: {texts:?}");
+    }
 }
 
 #[test]
